@@ -119,7 +119,7 @@ func (s *ProductService) GetProducts(page, limit int) ([]dto.ProductResponse, *u
 		limit = 10
 	}
 
-	ofset := (page - 1) * limit
+	offset := (page - 1) * limit
 	var products []models.Product
 	var total int64
 
@@ -127,7 +127,7 @@ func (s *ProductService) GetProducts(page, limit int) ([]dto.ProductResponse, *u
 
 	if err := s.db.Preload("Category").Preload("Images").
 		Where("is_active = ?", true).
-		Offset(ofset).Limit(limit).
+		Offset(offset).Limit(limit).
 		Find(&products).Error; err != nil {
 		return nil, nil, err
 	}
