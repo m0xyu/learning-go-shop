@@ -10,6 +10,12 @@ type UserService struct {
 	db *gorm.DB
 }
 
+func NewUserService(db *gorm.DB) *UserService {
+	return &UserService{
+		db: db,
+	}
+}
+
 func (s *UserService) GetProfile(userID uint) (*dto.UserResponse, error) {
 	var user models.User
 	if err := s.db.First(&user, userID).Error; err != nil {
