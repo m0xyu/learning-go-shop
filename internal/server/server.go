@@ -16,6 +16,7 @@ type Server struct {
 	logger         *zerolog.Logger
 	authService    *services.AuthService
 	productService *services.ProductService
+	uploadService  *services.UploadService
 	userService    *services.UserService
 }
 
@@ -26,6 +27,7 @@ func New(
 	authService *services.AuthService,
 	productService *services.ProductService,
 	userService *services.UserService,
+	uploadService *services.UploadService,
 ) *Server {
 	return &Server{
 		config:         ctg,
@@ -34,6 +36,7 @@ func New(
 		authService:    authService,
 		productService: productService,
 		userService:    userService,
+		uploadService:  uploadService,
 	}
 }
 
@@ -46,6 +49,8 @@ func (s *Server) SetupRoutes() *gin.Engine {
 	router.Use(s.crosMiddleware())
 
 	router.GET("/health", s.healthCheck)
+
+	router.Static("/uploads", s.config.Upload.Path)
 
 	api := router.Group("/api/v1")
 	{
@@ -84,11 +89,12 @@ func (s *Server) SetupRoutes() *gin.Engine {
 				productRoute.POST("/", s.adminMiddleware(), s.createProduct)
 				productRoute.PUT("/:id", s.adminMiddleware(), s.updateProduct)
 				productRoute.DELETE("/:id", s.adminMiddleware(), s.deleteProduct)
+				productRoute.POST("/:id/image", s.adminMiddleware(), s.uploadProductImage)
 			}
 		}
 
 		// Public Routes
-		api.GET("/categoies", s.getCategories)
+		api.GET("/categories", s.getCategories)
 		api.GET("/products", s.getProducts)
 		api.GET("/products/:id", s.getProduct)
 	}
