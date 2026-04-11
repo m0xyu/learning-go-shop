@@ -3,7 +3,7 @@ package server
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/dto"
-	"github.com/m0xyu/learning-go-shop/utils"
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 )
 
 func (s *Server) register(c *gin.Context) {

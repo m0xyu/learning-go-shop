@@ -8,7 +8,7 @@ import (
 	"github.com/m0xyu/learning-go-shop/internal/config"
 	"github.com/m0xyu/learning-go-shop/internal/dto"
 	"github.com/m0xyu/learning-go-shop/internal/models"
-	"github.com/m0xyu/learning-go-shop/utils"
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 	"gorm.io/gorm"
 )
 
@@ -43,14 +43,14 @@ func (s *AuthService) Register(req *dto.RegisterRequest) (*dto.AuthResponse, err
 		Phone:     req.Phone,
 		Role:      models.UserRoleCustomer,
 	}
-	if err := s.db.Create(user).Error; err != nil {
+	if err := s.db.Create(&user).Error; err != nil {
 		return nil, err
 	}
 
 	cart := models.Cart{
 		UserID: user.ID,
 	}
-	if err := s.db.Create(cart).Error; err != nil {
+	if err := s.db.Create(&cart).Error; err != nil {
 		fmt.Println("Unable to create cart")
 	}
 

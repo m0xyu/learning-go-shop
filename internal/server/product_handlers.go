@@ -6,7 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/dto"
 	"github.com/m0xyu/learning-go-shop/internal/services"
-	"github.com/m0xyu/learning-go-shop/utils"
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 )
 
 func (s *Server) createCategory(c *gin.Context) {

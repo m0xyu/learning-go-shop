@@ -49,8 +49,9 @@ func main() {
 		uploadProvider = providers.NewLocalUploadProvider(ctg.Upload.Path)
 	}
 	uploadService := services.NewUploadService(uploadProvider)
+	cartService := services.NewCartService(db)
 
-	srv := server.New(ctg, db, &log, authService, productService, userService, uploadService)
+	srv := server.New(ctg, db, &log, authService, productService, userService, uploadService, cartService)
 	router := srv.SetupRoutes()
 
 	httpServer := &http.Server{

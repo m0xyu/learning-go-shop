@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/m0xyu/learning-go-shop/internal/dto"
 	"github.com/m0xyu/learning-go-shop/internal/models"
-	"github.com/m0xyu/learning-go-shop/utils"
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 	"gorm.io/gorm"
 )
 

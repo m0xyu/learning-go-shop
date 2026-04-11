@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/models"
-	"github.com/m0xyu/learning-go-shop/utils"
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 )
 
 func (s *Server) authMiddleware() gin.HandlerFunc {
