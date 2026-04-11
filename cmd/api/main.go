@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/config"
 	"github.com/m0xyu/learning-go-shop/internal/database"
+	"github.com/m0xyu/learning-go-shop/internal/interfaces"
 	"github.com/m0xyu/learning-go-shop/internal/logger"
 	"github.com/m0xyu/learning-go-shop/internal/providers"
 	"github.com/m0xyu/learning-go-shop/internal/server"
@@ -40,7 +41,14 @@ func main() {
 	authService := services.NewAuthService(db, ctg)
 	productService := services.NewProductService(db)
 	userService := services.NewUserService(db)
-	uploadService := services.NewUploadService(providers.NewLocalUploadProvider(ctg.Upload.Path))
+
+	var uploadProvider interfaces.UploadProvider
+	if ctg.Upload.UploadProvider == "s3" {
+		uploadProvider = providers.NewS3Provider(ctg)
+	} else {
+		uploadProvider = providers.NewLocalUploadProvider(ctg.Upload.Path)
+	}
+	uploadService := services.NewUploadService(uploadProvider)
 
 	srv := server.New(ctg, db, &log, authService, productService, userService, uploadService)
 	router := srv.SetupRoutes()
