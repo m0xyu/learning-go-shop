@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/config"
 	"github.com/m0xyu/learning-go-shop/internal/database"
+	"github.com/m0xyu/learning-go-shop/internal/events"
 	"github.com/m0xyu/learning-go-shop/internal/interfaces"
 	"github.com/m0xyu/learning-go-shop/internal/logger"
 	"github.com/m0xyu/learning-go-shop/internal/providers"
@@ -52,9 +53,16 @@ func main() {
 	}
 
 	defer mainDB.Close()
+
+	ctx := context.Background()
+
+	eventPublisher, err := events.NewEventPublisher(ctx, &ctg.AWS)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to create event publisher")
+	}
 	gin.SetMode(ctg.Server.GinMode)
 
-	authService := services.NewAuthService(db, ctg)
+	authService := services.NewAuthService(db, ctg, eventPublisher)
 	productService := services.NewProductService(db)
 	userService := services.NewUserService(db)
 	orderService := services.NewOrderService(db)
