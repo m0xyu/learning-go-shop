@@ -30,5 +30,7 @@ WORKDIR /root/
 # Copy all binaries from builder
 COPY --from=builder /app/bin/* ./
 
+RUN chmod +x /root/*
+
 # Default command (can be overridden in docker-compose)
 CMD ["./api"]

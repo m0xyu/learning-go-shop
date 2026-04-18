@@ -30,11 +30,10 @@ func NewEmailNotifier(config *SMTPConfig) *EmailNotifier {
 	}
 }
 
-// SendSimpleEmail は、SMTPサーバーを使用してシンプルなメールを送信します。
 func (e *EmailNotifier) SendSimpleEmail(email *SimpleEmail) error {
-	addr := net.JoinHostPort(e.config.Host, fmt.Sprintf("%d", e.config.Port))
+	addr := fmt.Sprintf("%s:%d", e.config.Host, e.config.Port)
 
-	// 開発用にTLSなしで直接接続する
+	// Connect directly without TLS for development
 	conn, err := net.Dial("tcp", addr)
 	if err != nil {
 		return err
@@ -49,7 +48,6 @@ func (e *EmailNotifier) SendSimpleEmail(email *SimpleEmail) error {
 		_ = client.Quit()
 	}()
 
-	// 認証情報がある場合は認証する
 	if e.config.Username != "" || e.config.Password != "" {
 		auth := smtp.PlainAuth("", e.config.Username, e.config.Password, e.config.Host)
 		if err := client.Auth(auth); err != nil {
@@ -57,23 +55,22 @@ func (e *EmailNotifier) SendSimpleEmail(email *SimpleEmail) error {
 		}
 	}
 
-	// メールの送信
+	// Set sender
 	if err := client.Mail(e.config.From); err != nil {
 		return err
 	}
 
-	// 送信先を追加
+	// Set recipient
 	if err := client.Rcpt(email.To); err != nil {
 		return err
 	}
 
-	// データの書き込み
+	// Send message
 	w, err := client.Data()
 	if err != nil {
 		return err
 	}
 
-	// メールの内容をフォーマットして送信
 	msg := fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s",
 		e.config.From, email.To, email.Subject, email.Body)
 
@@ -85,7 +82,6 @@ func (e *EmailNotifier) SendSimpleEmail(email *SimpleEmail) error {
 	return w.Close()
 }
 
-// SendLoginNotification は、ユーザーがログインした際に通知メールを送信します。
 func (e *EmailNotifier) SendLoginNotification(userEmail, userName string) error {
 	email := &SimpleEmail{
 		To:      userEmail,
