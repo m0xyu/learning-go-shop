@@ -14,9 +14,9 @@ resolver:
     # follow-schema: creates separate files per schema type (Query, Mutation, etc.)
   # single-file: puts all resolvers in one file
 
-dir: graph/resolver                     # Directory where resolver files are generated
-package: resolver                       # Go package name for resolver files
-filename_template: "{name}.resolvers.go" # Template for resolver filenames (e.g., schema.resolvers.go)
+  dir: graph/resolver                     # Directory where resolver files are generated
+  package: resolver                       # Go package name for resolver files
+  filename_template: "{name}.resolvers.go" # Template for resolver filenames (e.g., schema.resolvers.go)
 
 autobind:
   - "github.com/m0xyu/learning-go-shop/internal/dto"
