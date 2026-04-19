@@ -117,7 +117,7 @@ func (s *Server) SetupRoutes() *gin.Engine {
 				productRoute.POST("/", s.adminMiddleware(), s.createProduct)
 				productRoute.PUT("/:id", s.adminMiddleware(), s.updateProduct)
 				productRoute.DELETE("/:id", s.adminMiddleware(), s.deleteProduct)
-				productRoute.POST("/:id/image", s.adminMiddleware(), s.uploadProductImage)
+				productRoute.POST("/:id/images", s.adminMiddleware(), s.uploadProductImage)
 			}
 
 			// Cart Routes

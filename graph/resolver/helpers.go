@@ -3,6 +3,8 @@ package resolver
 import (
 	"context"
 	"errors"
+
+	"github.com/m0xyu/learning-go-shop/internal/utils"
 )
 
 var (
@@ -15,7 +17,7 @@ const (
 
 // GetUserIDFromContext functions to extraact user info from GraphQL context
 func GetUserIDFromContext(ctx context.Context) (uint, error) {
-	userID := ctx.Value("user_id")
+	userID := ctx.Value(utils.UserIDKey)
 	if userID == nil {
 		return 0, ErrUnauthorized
 	}
@@ -28,7 +30,7 @@ func GetUserIDFromContext(ctx context.Context) (uint, error) {
 }
 
 func GetUserRoleFromContext(ctx context.Context) (string, error) {
-	role := ctx.Value("user_role")
+	role := ctx.Value(utils.UserRoleKey)
 	if role == nil {
 		return "", ErrUnauthorized
 	}
@@ -49,7 +51,7 @@ func IsAdminFromContext(ctx context.Context) bool {
 	return role == adminRole
 }
 
-func getPagingNumbers(page *int, limit *int) (int, int) {
+func getPagingNumbers(page, limit *int) (pageNumber, pageLimit int) {
 	var p, l = 0, 0
 
 	if page != nil {

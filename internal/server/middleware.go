@@ -46,12 +46,19 @@ func (s *Server) authMiddleware() gin.HandlerFunc {
 
 func (s *Server) adminMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		role, exists := c.Get("role")
-		if !exists || role != string(models.UserRoleAdmin) {
+		role, exists := c.Get("user_role")
+		if !exists {
 			utils.ForbiddenResponse(c, "Forbidden")
 			c.Abort()
 			return
 		}
+
+		if role != string(models.UserRoleAdmin) {
+			utils.ForbiddenResponse(c, "Forbidden")
+			c.Abort()
+			return
+		}
+
 		c.Next()
 	}
 }
