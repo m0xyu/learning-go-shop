@@ -43,11 +43,6 @@ func (r *orderResolver) UserID(ctx context.Context, obj *dto.OrderResponse) (str
 	return fmt.Sprintf("%d", obj.UserID), nil
 }
 
-// CreatedAt is the resolver for the created_at field.
-func (r *orderResolver) CreatedAt(ctx context.Context, obj *dto.OrderResponse) (string, error) {
-	return obj.CreatedAt.Format("2006-01-02T15:04:05Z"), nil
-}
-
 // ID is the resolver for the id field.
 func (r *orderItemResolver) ID(ctx context.Context, obj *dto.OrderItemResponse) (string, error) {
 	return fmt.Sprintf("%d", obj.ID), nil
