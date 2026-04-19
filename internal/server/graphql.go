@@ -58,6 +58,24 @@ func (s *Server) playgroundHandler() gin.HandlerFunc {
 	}
 }
 
+// playgroundPublicHandler is for testing without authentication
+func (s *Server) playgroundPublicHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL Playground (Public)", "/graphql/public/")
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+// playgroundProtectedHandler is for testing with authentication
+func (s *Server) playgroundProtectedHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL Playground (Protected)", "/graphql/")
+
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
 func (s *Server) graphqlMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 
