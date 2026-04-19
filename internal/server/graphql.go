@@ -17,11 +17,11 @@ import (
 
 func (s *Server) createGraphQLHandler() *handler.Server {
 	rvr := resolver.NewResolver(
-		*s.authService,
-		*s.userService,
-		*s.productService,
-		*s.cartService,
-		*s.orderService,
+		s.authService,
+		s.userService,
+		s.productService,
+		s.cartService,
+		s.orderService,
 	)
 
 	schema := graph.NewExecutableSchema(graph.Config{Resolvers: rvr})

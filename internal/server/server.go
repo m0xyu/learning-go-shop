@@ -17,24 +17,24 @@ type Server struct {
 	config *config.Config
 	// db             *gorm.DB
 	logger         *zerolog.Logger
-	authService    *services.AuthService
-	productService *services.ProductService
-	uploadService  *services.UploadService
-	userService    *services.UserService
-	cartService    *services.CartService
-	orderService   *services.OrderService
+	authService    services.AuthServiceInterface
+	productService services.ProductServiceInterface
+	uploadService  services.UploadServiceInterface
+	userService    services.UserServiceInterface
+	cartService    services.CartServiceInterface
+	orderService   services.OrderServiceInterface
 }
 
 func New(
 	ctg *config.Config,
 	// db *gorm.DB,
 	logger *zerolog.Logger,
-	authService *services.AuthService,
-	productService *services.ProductService,
-	userService *services.UserService,
-	uploadService *services.UploadService,
-	cartService *services.CartService,
-	orderService *services.OrderService,
+	authService services.AuthServiceInterface,
+	productService services.ProductServiceInterface,
+	userService services.UserServiceInterface,
+	uploadService services.UploadServiceInterface,
+	cartService services.CartServiceInterface,
+	orderService services.OrderServiceInterface,
 ) *Server {
 	return &Server{
 		config: ctg,
