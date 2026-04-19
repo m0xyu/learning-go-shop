@@ -5,7 +5,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/m0xyu/learning-go-shop/internal/dto"
-	"github.com/m0xyu/learning-go-shop/internal/services"
 	"github.com/m0xyu/learning-go-shop/internal/utils"
 )
 
@@ -283,8 +282,7 @@ func (s *Server) uploadProductImage(c *gin.Context) {
 		return
 	}
 
-	productService := services.NewProductService(s.db)
-	if err := productService.AddProductImage(uint(id), url, file.Filename); err != nil {
+	if err := s.productService.AddProductImage(uint(id), url, file.Filename); err != nil {
 		utils.InternalServerErrorResponse(c, "Failed to save image record", err)
 		return
 	}
