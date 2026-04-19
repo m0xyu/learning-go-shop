@@ -6,6 +6,8 @@ import (
 	"gorm.io/gorm"
 )
 
+var _ UserServiceInterface = (*UserService)(nil)
+
 type UserService struct {
 	db *gorm.DB
 }
@@ -30,6 +32,8 @@ func (s *UserService) GetProfile(userID uint) (*dto.UserResponse, error) {
 		Phone:     user.Phone,
 		Role:      string(user.Role),
 		IsActive:  user.IsActive,
+		CreatedAt: user.CreatedAt,
+		UpdatedAt: user.UpdatedAt,
 	}, nil
 }
 

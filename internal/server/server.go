@@ -8,38 +8,37 @@ import (
 	"github.com/m0xyu/learning-go-shop/internal/config"
 	"github.com/m0xyu/learning-go-shop/internal/services"
 	"github.com/rs/zerolog"
-	"gorm.io/gorm"
 
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
-	config         *config.Config
-	db             *gorm.DB
+	config *config.Config
+	// db             *gorm.DB
 	logger         *zerolog.Logger
-	authService    *services.AuthService
-	productService *services.ProductService
-	uploadService  *services.UploadService
-	userService    *services.UserService
-	cartService    *services.CartService
-	orderService   *services.OrderService
+	authService    services.AuthServiceInterface
+	productService services.ProductServiceInterface
+	uploadService  services.UploadServiceInterface
+	userService    services.UserServiceInterface
+	cartService    services.CartServiceInterface
+	orderService   services.OrderServiceInterface
 }
 
 func New(
 	ctg *config.Config,
-	db *gorm.DB,
+	// db *gorm.DB,
 	logger *zerolog.Logger,
-	authService *services.AuthService,
-	productService *services.ProductService,
-	userService *services.UserService,
-	uploadService *services.UploadService,
-	cartService *services.CartService,
-	orderService *services.OrderService,
+	authService services.AuthServiceInterface,
+	productService services.ProductServiceInterface,
+	userService services.UserServiceInterface,
+	uploadService services.UploadServiceInterface,
+	cartService services.CartServiceInterface,
+	orderService services.OrderServiceInterface,
 ) *Server {
 	return &Server{
-		config:         ctg,
-		db:             db,
+		config: ctg,
+		// db:             db,
 		logger:         logger,
 		authService:    authService,
 		productService: productService,
@@ -66,6 +65,19 @@ func (s *Server) SetupRoutes() *gin.Engine {
 	router.StaticFile("/api-docs", "./docs/rapidoc.html")
 
 	router.Static("/uploads", s.config.Upload.Path)
+
+	router.GET("/playground", s.playgroundHandler())
+	router.GET("/playground/public", s.playgroundPublicHandler())
+	router.GET("/playground/protected", s.playgroundProtectedHandler())
+
+	graphqlPublic := router.Group("/graphql/public")
+	graphqlPublic.Use(s.graphqlMiddleware())
+	graphqlPublic.POST("/", s.graphQLHandler())
+
+	graphqlProtected := router.Group("/graphql")
+	graphqlProtected.Use(s.authMiddleware())
+	graphqlProtected.Use(s.graphqlMiddleware())
+	graphqlProtected.POST("/", s.graphQLHandler())
 
 	api := router.Group("/api/v1")
 	{
@@ -104,7 +116,7 @@ func (s *Server) SetupRoutes() *gin.Engine {
 				productRoute.POST("/", s.adminMiddleware(), s.createProduct)
 				productRoute.PUT("/:id", s.adminMiddleware(), s.updateProduct)
 				productRoute.DELETE("/:id", s.adminMiddleware(), s.deleteProduct)
-				productRoute.POST("/:id/image", s.adminMiddleware(), s.uploadProductImage)
+				productRoute.POST("/:id/images", s.adminMiddleware(), s.uploadProductImage)
 			}
 
 			// Cart Routes
