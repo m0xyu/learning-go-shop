@@ -15,6 +15,7 @@ import (
 	"github.com/m0xyu/learning-go-shop/internal/interfaces"
 	"github.com/m0xyu/learning-go-shop/internal/logger"
 	"github.com/m0xyu/learning-go-shop/internal/providers"
+	"github.com/m0xyu/learning-go-shop/internal/repositories"
 	"github.com/m0xyu/learning-go-shop/internal/server"
 	"github.com/m0xyu/learning-go-shop/internal/services"
 )
@@ -62,7 +63,10 @@ func main() {
 	}
 	gin.SetMode(ctg.Server.GinMode)
 
-	authService := services.NewAuthService(db, ctg, eventPublisher)
+	userRepo := repositories.NewUserRepository(db)
+	cartRepo := repositories.NewCartRepository(db)
+
+	authService := services.NewAuthService(userRepo, cartRepo, ctg, eventPublisher)
 	productService := services.NewProductService(db)
 	userService := services.NewUserService(db)
 	orderService := services.NewOrderService(db)
