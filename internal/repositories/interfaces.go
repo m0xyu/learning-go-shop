@@ -22,3 +22,19 @@ type CartRepositoryInterface interface {
 	Update(cart *models.Cart) error
 	Delete(id uint) error
 }
+
+func ProductRepositoryInterface() interface {
+	GetByID(id uint) (*models.Product, error)
+	GetAll(offset, limit int) ([]models.Product, int64, error)
+	Create(product *models.Product) error
+	Update(product *models.Product) error
+	Delete(id uint) error
+}
+
+func CategoryRepositoryInterface() interface {
+	GetByID(id uint) (*models.Category, error)
+	GetAll() ([]models.Category, error)
+	Create(category *models.Category) error
+	Update(category *models.Category) error
+	Delete(id uint) error
+}
