@@ -2,36 +2,42 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/m0xyu/learning-go-shop/internal/dto"
 	"github.com/m0xyu/learning-go-shop/internal/models"
+	"github.com/m0xyu/learning-go-shop/internal/repositories"
 	"gorm.io/gorm"
 )
 
 var _ CartServiceInterface = (*CartService)(nil)
 
 type CartService struct {
-	db *gorm.DB
+	productRepo  repositories.ProductRepositoryInterface
+	cartRepo     repositories.CartRepositoryInterface
+	cartItemRepo repositories.CartItemRepositoryInterface
 }
 
-func NewCartService(db *gorm.DB) *CartService {
-	return &CartService{db: db}
+func NewCartService(
+	productRepo repositories.ProductRepositoryInterface,
+	cartRepo repositories.CartRepositoryInterface,
+	cartItemRepo repositories.CartItemRepositoryInterface,
+) *CartService {
+	return &CartService{productRepo: productRepo, cartRepo: cartRepo, cartItemRepo: cartItemRepo}
 }
 
 func (s *CartService) GetCart(userID uint) (*dto.CartResponse, error) {
-	var cart models.Cart
-	err := s.db.Preload("CartItems.Product.Category").
-		Where("user_id = ?", userID).First(&cart).Error
+	cart, err := s.cartRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, err
 	}
 
-	return s.convertToCartResponse(&cart), nil
+	return s.convertToCartResponse(cart), nil
 }
 
 func (s *CartService) AddToCart(userID uint, req *dto.AddToCartRequest) (*dto.CartResponse, error) {
-	var product models.Product
-	if err := s.db.First(&product, req.ProductID).Error; err != nil {
+	product, err := s.productRepo.GetByID(req.ProductID)
+	if err != nil {
 		return nil, errors.New("product not found")
 	}
 
@@ -39,43 +45,53 @@ func (s *CartService) AddToCart(userID uint, req *dto.AddToCartRequest) (*dto.Ca
 		return nil, errors.New("insufficient stock")
 	}
 
-	var cart models.Cart
-	if err := s.db.Where("user_id = ?", userID).First(&cart).Error; err != nil {
-		cart = models.Cart{UserID: userID}
-		if err := s.db.Create(&cart).Error; err != nil {
+	cart, err := s.cartRepo.GetByUserID(userID)
+	if err != nil {
+		cart = &models.Cart{UserID: userID}
+		if err := s.cartRepo.Create(cart); err != nil {
 			return nil, err
 		}
 	}
 
-	var cartItem models.CartItem
-	if err := s.db.Where("cart_id = ? AND product_id = ?", cart.ID, req.ProductID).First(&cartItem).Error; err != nil {
-		cartItem = models.CartItem{
-			CartID:    cart.ID,
-			ProductID: req.ProductID,
-			Quantity:  req.Quantity,
+	cartItem, err := s.cartItemRepo.GetByCartAndProduct(cart.ID, req.ProductID)
+	if err != nil {
+		fmt.Printf("err: %v\n", err)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			cartItem = &models.CartItem{
+				CartID:    cart.ID,
+				ProductID: req.ProductID,
+				Quantity:  req.Quantity,
+			}
+			if err := s.cartItemRepo.Create(cartItem); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
 		}
-		s.db.Create(&cartItem)
 	} else {
-		cartItem.Quantity += req.Quantity
-		if cartItem.Quantity > product.Stock {
-			return nil, errors.New("insufficient stock")
+		// ソフトデリートされたアイテムが存在する場合は、削除フラグを解除して数量を更新
+		if cartItem.DeletedAt.Valid {
+			cartItem.DeletedAt = gorm.DeletedAt{}
+			cartItem.Quantity = req.Quantity
+		} else {
+			cartItem.Quantity += req.Quantity
 		}
-		s.db.Save(&cartItem)
+		if err := s.cartItemRepo.Update(cartItem); err != nil {
+			return nil, err
+		}
 	}
 
 	return s.GetCart(userID)
 }
 
 func (s *CartService) UpdateCartItem(userID, itemID uint, req *dto.UpdateCartItemRequest) (*dto.CartResponse, error) {
-	var cartItem models.CartItem
-	if err := s.db.Joins("JOIN carts ON cart_items.cart_id = carts.id").
-		Where("cart_items.id = ? AND carts.user_id = ?", itemID, userID).
-		First(&cartItem).Error; err != nil {
+	cartItem, err := s.cartItemRepo.GetByUserIDAndItemID(userID, itemID)
+	if err != nil {
 		return nil, errors.New("cart item not found")
 	}
 
-	var product models.Product
-	if err := s.db.First(&product, cartItem.ProductID).Error; err != nil {
+	product, err := s.productRepo.GetByID(cartItem.ProductID)
+	if err != nil {
 		return nil, errors.New("product not found")
 	}
 
@@ -84,7 +100,7 @@ func (s *CartService) UpdateCartItem(userID, itemID uint, req *dto.UpdateCartIte
 	}
 
 	cartItem.Quantity = req.Quantity
-	if err := s.db.Save(&cartItem).Error; err != nil {
+	if err := s.cartItemRepo.Update(cartItem); err != nil {
 		return nil, err
 	}
 
@@ -92,10 +108,7 @@ func (s *CartService) UpdateCartItem(userID, itemID uint, req *dto.UpdateCartIte
 }
 
 func (s *CartService) RemoveFromCart(userID, itemID uint) error {
-	return s.db.Where("id = ? AND cart_id IN (?)", itemID,
-		s.db.Select("id").Table("carts").
-			Where("user_id = ?", userID)).
-		Delete(&models.CartItem{}).Error
+	return s.cartItemRepo.Delete(userID, itemID)
 }
 
 func (s *CartService) convertToCartResponse(cart *models.Cart) *dto.CartResponse {

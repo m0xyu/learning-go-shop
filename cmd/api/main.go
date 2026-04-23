@@ -15,6 +15,7 @@ import (
 	"github.com/m0xyu/learning-go-shop/internal/interfaces"
 	"github.com/m0xyu/learning-go-shop/internal/logger"
 	"github.com/m0xyu/learning-go-shop/internal/providers"
+	"github.com/m0xyu/learning-go-shop/internal/repositories"
 	"github.com/m0xyu/learning-go-shop/internal/server"
 	"github.com/m0xyu/learning-go-shop/internal/services"
 )
@@ -62,8 +63,15 @@ func main() {
 	}
 	gin.SetMode(ctg.Server.GinMode)
 
-	authService := services.NewAuthService(db, ctg, eventPublisher)
-	productService := services.NewProductService(db)
+	userRepo := repositories.NewUserRepository(db)
+	cartRepo := repositories.NewCartRepository(db)
+	productRepo := repositories.NewProductRepository(db)
+	ctgRepo := repositories.NewCategoryRepository(db)
+	productImageRepo := repositories.NewProductImageRepository(db)
+	cartItemRepo := repositories.NewCartItemRepository(db)
+
+	authService := services.NewAuthService(userRepo, cartRepo, ctg, eventPublisher)
+	productService := services.NewProductService(productRepo, ctgRepo, productImageRepo)
 	userService := services.NewUserService(db)
 	orderService := services.NewOrderService(db)
 
@@ -74,7 +82,7 @@ func main() {
 		uploadProvider = providers.NewLocalUploadProvider(ctg.Upload.Path)
 	}
 	uploadService := services.NewUploadService(uploadProvider)
-	cartService := services.NewCartService(db)
+	cartService := services.NewCartService(productRepo, cartRepo, cartItemRepo)
 
 	srv := server.New(
 		ctg,

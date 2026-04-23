@@ -1,0 +1,54 @@
+package repositories
+
+import "github.com/m0xyu/learning-go-shop/internal/models"
+
+type UserRepositoryInterface interface {
+	GetByEmail(email string) (*models.User, error)
+	GetByID(id uint) (*models.User, error)
+	GetByEmailAndActive(email string, isActive bool) (*models.User, error)
+	Create(user *models.User) error
+	Update(user *models.User) error
+	Delete(id uint) error
+
+	CreateRefreshToken(token *models.RefreshToken) error
+	GetValidRefreshToken(token string) (*models.RefreshToken, error)
+	DeleteRefreshToken(token string) error
+	DeleteRefreshTokenByID(id uint) error
+}
+
+type CartRepositoryInterface interface {
+	GetByUserID(userID uint) (*models.Cart, error)
+	Create(cart *models.Cart) error
+	Update(cart *models.Cart) error
+	Delete(id uint) error
+}
+
+type ProductRepositoryInterface interface {
+	GetByID(id uint) (*models.Product, error)
+	GetAll(offset, limit int) ([]models.Product, int64, error)
+	Create(product *models.Product) error
+	Update(product *models.Product) error
+	Delete(id uint) error
+}
+
+type CategoryRepositoryInterface interface {
+	GetByID(id uint) (*models.Category, error)
+	GetAll() ([]models.Category, error)
+	Create(category *models.Category) error
+	Update(category *models.Category) error
+	Delete(id uint) error
+}
+
+type ProductImageRepositoryInterface interface {
+	GetImagesCountByProductID(productID uint) (int64, error)
+	Create(image *models.ProductImage) error
+}
+
+type CartItemRepositoryInterface interface {
+	GetByCartIDAndProductID(cartID uint, productID uint) ([]models.CartItem, error)
+	GetByUserIDAndItemID(userID, itemID uint) (*models.CartItem, error)
+	Update(cartItem *models.CartItem) error
+	Delete(userID, itemID uint) error
+	GetByCartAndProduct(cartID, productID uint) (*models.CartItem, error)
+	Create(cartItem *models.CartItem) error
+}
