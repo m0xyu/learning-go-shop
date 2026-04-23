@@ -141,6 +141,7 @@ func (s *Server) SetupRoutes() *gin.Engine {
 
 		// Public Routes
 		api.GET("/categories", s.getCategories)
+		api.GET("/search", s.searchProducts)
 		api.GET("/products", s.getProducts)
 		api.GET("/products/:id", s.getProduct)
 	}

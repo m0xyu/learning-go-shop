@@ -1,6 +1,9 @@
 package repositories
 
-import "github.com/m0xyu/learning-go-shop/internal/models"
+import (
+	"github.com/m0xyu/learning-go-shop/internal/dto"
+	"github.com/m0xyu/learning-go-shop/internal/models"
+)
 
 type UserRepositoryInterface interface {
 	GetByEmail(email string) (*models.User, error)
@@ -29,6 +32,7 @@ type ProductRepositoryInterface interface {
 	Create(product *models.Product) error
 	Update(product *models.Product) error
 	Delete(id uint) error
+	Search(req *dto.SearchProductsRequest) ([]models.ProductsWithRank, int64, error)
 }
 
 type CategoryRepositoryInterface interface {

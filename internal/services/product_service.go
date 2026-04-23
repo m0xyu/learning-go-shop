@@ -197,6 +197,41 @@ func (s *ProductService) AddProductImage(productID uint, imageURL, altText strin
 	return s.productImageRepo.Create(&image)
 }
 
+func (s *ProductService) SearchProducts(req *dto.SearchProductsRequest) ([]dto.ProductSearchResult, *utils.PaginationMeta, error) {
+	if req.Page < 1 {
+		req.Page = 1
+	}
+
+	if req.Limit < 1 {
+		req.Limit = 10
+	}
+
+	rows, total, err := s.productRepo.Search(req)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Build output response
+	results := make([]dto.ProductSearchResult, len(rows))
+	for i := range rows {
+		results[i] = dto.ProductSearchResult{
+			ProductResponse: s.convertToProductResponse(&rows[i].Product),
+			Rank:            rows[i].Rank,
+		}
+	}
+
+	// build pagination meta
+	totalPages := int((total + int64(req.Limit) - 1) / int64(req.Limit))
+	meta := &utils.PaginationMeta{
+		Page:       req.Page,
+		Limit:      req.Limit,
+		Total:      total,
+		TotalPages: totalPages,
+	}
+
+	return results, meta, nil
+}
+
 func (s *ProductService) convertToProductResponse(product *models.Product) dto.ProductResponse {
 	images := make([]dto.ProductImageResponse, len(product.Images))
 	for i := range product.Images {

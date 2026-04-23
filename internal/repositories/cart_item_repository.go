@@ -15,7 +15,7 @@ func NewCartItemRepository(db *gorm.DB) *CartItemRepository {
 	return &CartItemRepository{db: db}
 }
 
-func (r *CartItemRepository) GetByCartIDAndProductID(cartID uint, productID uint) ([]models.CartItem, error) {
+func (r *CartItemRepository) GetByCartIDAndProductID(cartID, productID uint) ([]models.CartItem, error) {
 	var cartItems []models.CartItem
 	if err := r.db.Where("cart_id = ? AND product_id = ?", cartID, productID).Find(&cartItems).Error; err != nil {
 		return nil, err

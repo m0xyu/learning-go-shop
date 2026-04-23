@@ -51,3 +51,8 @@ type ProductImage struct {
 	// Relationships
 	Product Product `json:"-"`
 }
+
+type ProductsWithRank struct {
+	Product
+	Rank float32 `gorm:"column:rank"`
+}
