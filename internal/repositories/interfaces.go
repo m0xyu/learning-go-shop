@@ -23,7 +23,7 @@ type CartRepositoryInterface interface {
 	Delete(id uint) error
 }
 
-func ProductRepositoryInterface() interface {
+type ProductRepositoryInterface interface {
 	GetByID(id uint) (*models.Product, error)
 	GetAll(offset, limit int) ([]models.Product, int64, error)
 	Create(product *models.Product) error
@@ -31,10 +31,24 @@ func ProductRepositoryInterface() interface {
 	Delete(id uint) error
 }
 
-func CategoryRepositoryInterface() interface {
+type CategoryRepositoryInterface interface {
 	GetByID(id uint) (*models.Category, error)
 	GetAll() ([]models.Category, error)
 	Create(category *models.Category) error
 	Update(category *models.Category) error
 	Delete(id uint) error
+}
+
+type ProductImageRepositoryInterface interface {
+	GetImagesCountByProductID(productID uint) (int64, error)
+	Create(image *models.ProductImage) error
+}
+
+type CartItemRepositoryInterface interface {
+	GetByCartIDAndProductID(cartID uint, productID uint) ([]models.CartItem, error)
+	GetByUserIDAndItemID(userID, itemID uint) (*models.CartItem, error)
+	Update(cartItem *models.CartItem) error
+	Delete(userID, itemID uint) error
+	GetByCartAndProduct(cartID, productID uint) (*models.CartItem, error)
+	Create(cartItem *models.CartItem) error
 }

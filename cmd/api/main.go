@@ -65,9 +65,13 @@ func main() {
 
 	userRepo := repositories.NewUserRepository(db)
 	cartRepo := repositories.NewCartRepository(db)
+	productRepo := repositories.NewProductRepository(db)
+	ctgRepo := repositories.NewCategoryRepository(db)
+	productImageRepo := repositories.NewProductImageRepository(db)
+	cartItemRepo := repositories.NewCartItemRepository(db)
 
 	authService := services.NewAuthService(userRepo, cartRepo, ctg, eventPublisher)
-	productService := services.NewProductService(db)
+	productService := services.NewProductService(productRepo, ctgRepo, productImageRepo)
 	userService := services.NewUserService(db)
 	orderService := services.NewOrderService(db)
 
@@ -78,7 +82,7 @@ func main() {
 		uploadProvider = providers.NewLocalUploadProvider(ctg.Upload.Path)
 	}
 	uploadService := services.NewUploadService(uploadProvider)
-	cartService := services.NewCartService(db)
+	cartService := services.NewCartService(productRepo, cartRepo, cartItemRepo)
 
 	srv := server.New(
 		ctg,

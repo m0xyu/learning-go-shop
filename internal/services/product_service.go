@@ -3,18 +3,24 @@ package services
 import (
 	"github.com/m0xyu/learning-go-shop/internal/dto"
 	"github.com/m0xyu/learning-go-shop/internal/models"
+	"github.com/m0xyu/learning-go-shop/internal/repositories"
 	"github.com/m0xyu/learning-go-shop/internal/utils"
-	"gorm.io/gorm"
 )
 
 var _ ProductServiceInterface = (*ProductService)(nil)
 
 type ProductService struct {
-	db *gorm.DB
+	productRepo      repositories.ProductRepositoryInterface
+	categoryRepo     repositories.CategoryRepositoryInterface
+	productImageRepo repositories.ProductImageRepositoryInterface
 }
 
-func NewProductService(db *gorm.DB) *ProductService {
-	return &ProductService{db: db}
+func NewProductService(
+	productRepo repositories.ProductRepositoryInterface,
+	categoryRepo repositories.CategoryRepositoryInterface,
+	productImageRepo repositories.ProductImageRepositoryInterface,
+) *ProductService {
+	return &ProductService{productRepo: productRepo, categoryRepo: categoryRepo, productImageRepo: productImageRepo}
 }
 
 func (s *ProductService) CreateCategory(req *dto.CreateCategoryRequest) (*dto.CategoryResponse, error) {
@@ -24,7 +30,7 @@ func (s *ProductService) CreateCategory(req *dto.CreateCategoryRequest) (*dto.Ca
 		Description: req.Description,
 	}
 
-	if err := s.db.Create(&category).Error; err != nil {
+	if err := s.categoryRepo.Create(&category); err != nil {
 		return nil, err
 	}
 
@@ -40,8 +46,8 @@ func (s *ProductService) CreateCategory(req *dto.CreateCategoryRequest) (*dto.Ca
 }
 
 func (s *ProductService) GetCategories() ([]dto.CategoryResponse, error) {
-	var categories []models.Category
-	if err := s.db.Where("is_active = ?", true).Find(&categories).Error; err != nil {
+	categories, err := s.categoryRepo.GetAll()
+	if err != nil {
 		return nil, err
 	}
 
@@ -62,8 +68,8 @@ func (s *ProductService) GetCategories() ([]dto.CategoryResponse, error) {
 
 func (s *ProductService) UpdateCategory(id uint, req *dto.UpdateCategoryRequest) (*dto.CategoryResponse, error) {
 
-	var category models.Category
-	if err := s.db.First(&category, id).Error; err != nil {
+	category, err := s.categoryRepo.GetByID(id)
+	if err != nil {
 		return nil, err
 	}
 
@@ -73,7 +79,7 @@ func (s *ProductService) UpdateCategory(id uint, req *dto.UpdateCategoryRequest)
 		category.IsActive = *req.IsActive
 	}
 
-	if err := s.db.Save(&category).Error; err != nil {
+	if err := s.categoryRepo.Update(category); err != nil {
 		return nil, err
 	}
 
@@ -88,16 +94,16 @@ func (s *ProductService) UpdateCategory(id uint, req *dto.UpdateCategoryRequest)
 }
 
 func (s *ProductService) DeleteCategory(id uint) error {
-	return s.db.Delete(&models.Category{}, id).Error
+	return s.categoryRepo.Delete(id)
 }
 
 func (s *ProductService) GetProduct(id uint) (*dto.ProductResponse, error) {
-	var product models.Product
-	if err := s.db.Preload("Category").Preload("Images").First(&product, id).Error; err != nil {
+	product, err := s.productRepo.GetByID(id)
+	if err != nil {
 		return nil, err
 	}
 
-	response := s.convertToProductResponse(&product)
+	response := s.convertToProductResponse(product)
 	return &response, nil
 }
 
@@ -111,7 +117,7 @@ func (s *ProductService) CreateProduct(req *dto.CreateProductRequest) (*dto.Prod
 		SKU:         req.SKU,
 	}
 
-	if err := s.db.Create(&product).Error; err != nil {
+	if err := s.productRepo.Create(&product); err != nil {
 		return nil, err
 	}
 
@@ -128,15 +134,8 @@ func (s *ProductService) GetProducts(page, limit int) ([]dto.ProductResponse, *u
 	}
 
 	offset := (page - 1) * limit
-	var products []models.Product
-	var total int64
-
-	s.db.Model(models.Product{}).Where("is_active = ?", true).Count(&total)
-
-	if err := s.db.Preload("Category").Preload("Images").
-		Where("is_active = ?", true).
-		Offset(offset).Limit(limit).
-		Find(&products).Error; err != nil {
+	products, total, err := s.productRepo.GetAll(offset, limit)
+	if err != nil {
 		return nil, nil, err
 	}
 
@@ -157,8 +156,8 @@ func (s *ProductService) GetProducts(page, limit int) ([]dto.ProductResponse, *u
 }
 
 func (s *ProductService) UpdateProduct(id uint, req *dto.UpdateProductRequest) (*dto.ProductResponse, error) {
-	var product models.Product
-	if err := s.db.First(&product, id).Error; err != nil {
+	product, err := s.productRepo.GetByID(id)
+	if err != nil {
 		return nil, err
 	}
 
@@ -171,7 +170,7 @@ func (s *ProductService) UpdateProduct(id uint, req *dto.UpdateProductRequest) (
 		product.IsActive = *req.IsActive
 	}
 
-	if err := s.db.Save(&product).Error; err != nil {
+	if err := s.productRepo.Update(product); err != nil {
 		return nil, err
 	}
 
@@ -179,12 +178,14 @@ func (s *ProductService) UpdateProduct(id uint, req *dto.UpdateProductRequest) (
 }
 
 func (s *ProductService) DeleteProduct(id uint) error {
-	return s.db.Delete(&models.Product{}, id).Error
+	return s.productRepo.Delete(id)
 }
 
 func (s *ProductService) AddProductImage(productID uint, imageURL, altText string) error {
-	var count int64
-	s.db.Model(&models.ProductImage{}).Where("product_id = ?", productID).Count(&count)
+	count, err := s.productImageRepo.GetImagesCountByProductID(productID)
+	if err != nil {
+		return err
+	}
 
 	image := models.ProductImage{
 		ProductID: productID,
@@ -193,7 +194,7 @@ func (s *ProductService) AddProductImage(productID uint, imageURL, altText strin
 		IsPrimary: count == 0, // 最初の画像はプライマリにする
 	}
 
-	return s.db.Create(&image).Error
+	return s.productImageRepo.Create(&image)
 }
 
 func (s *ProductService) convertToProductResponse(product *models.Product) dto.ProductResponse {
