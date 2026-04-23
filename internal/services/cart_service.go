@@ -69,8 +69,13 @@ func (s *CartService) AddToCart(userID uint, req *dto.AddToCartRequest) (*dto.Ca
 			return nil, err
 		}
 	} else {
-		fmt.Printf("CartItem: %+v, err: %v\n", cartItem, err)
-		cartItem.Quantity += req.Quantity
+		// ソフトデリートされたアイテムが存在する場合は、削除フラグを解除して数量を更新
+		if cartItem.DeletedAt.Valid {
+			cartItem.DeletedAt = gorm.DeletedAt{}
+			cartItem.Quantity = req.Quantity
+		} else {
+			cartItem.Quantity += req.Quantity
+		}
 		if err := s.cartItemRepo.Update(cartItem); err != nil {
 			return nil, err
 		}
