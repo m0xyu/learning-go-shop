@@ -9,6 +9,11 @@ help:
 	@echo "  make format      - Format the code"
 	@echo "  make migrate-up  - Apply database migrations"
 	@echo "  make migrate-down- Rollback database migrations"
+	@echo "  make docs-generate - Generate API documentation"
+	@echo "  make docker-up   - Start the application using Docker"
+	@echo "  make docker-down - Stop the application using Docker"
+	@echo "  make graph-generate - Generate GraphQL code"
+	@echo "  make mock        - Generate mock implementations for testing"
 
 
 build:
@@ -54,3 +59,9 @@ docker-down:
 graph-generate:	
 	@go get github.com/99designs/gqlgen@v0.17.89
 	@go run github.com/99designs/gqlgen generate
+
+mock:
+	@mkdir -p internal/mocks
+	mockgen -source=internal/repositories/interfaces.go \
+        -destination=internal/mocks/repositories_mock.go \
+        -package=mocks -typed
